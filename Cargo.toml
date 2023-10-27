@@ -1,0 +1,9 @@
+[package]
+name = "crane"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rayon = "1.8.0"
+scoped_threadpool = "0.1.9"
+url = "2.4.1"
