@@ -1,3 +1,21 @@
+/// Response builder.
+///
+/// # Examples
+///
+/// ```rs
+/// use crane_webserver::webserver::WebServer;
+/// fn main() {
+///     // .. server setup
+/// }
+///
+/// fn root(_: Query) -> Response {
+///     ResponseBuilder::new()
+///         .status(200)
+///         .header("Content-Type", "text/plain")
+///         .body("Hello, World!")
+///         .build()
+/// }
+/// ```
 #[derive(Debug)]
 pub struct ResponseBuilder {
     status: u16,
@@ -6,6 +24,7 @@ pub struct ResponseBuilder {
 }
 
 impl ResponseBuilder {
+    /// Construct a new `ResponseBuilder`.
     pub fn new() -> Self {
         ResponseBuilder {
             status: 200,
@@ -14,21 +33,25 @@ impl ResponseBuilder {
         }
     }
 
+    /// Set the html status code.
     pub fn status(mut self, status: u16) -> Self {
         self.status = status;
         self
     }
 
+    /// Set a header key-value pair.
     pub fn header(mut self, key: &str, value: &str) -> Self {
         self.headers.push((key.to_string(), value.to_string()));
         self
     }
 
+    /// Set the body of the response.
     pub fn body(mut self, body: &str) -> Self {
         self.body = body.to_string();
         self
     }
 
+    /// Consume the `ResponseBuilder` and construct a `Response`.
     pub fn build(self) -> Response {
         Response {
             status: self.status,
@@ -38,6 +61,7 @@ impl ResponseBuilder {
     }
 }
 
+/// The response which will be sent when requested.
 pub struct Response {
     status: u16,
     headers: Vec<(String, String)>,

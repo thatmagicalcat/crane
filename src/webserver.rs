@@ -12,6 +12,29 @@ use url::Url;
 
 type Handler = dyn Fn(Query) -> Response + 'static + Send + Sync;
 
+/// A web server.
+///
+/// This is the core type of this crate, and is used to create a new
+/// server and listen for connections.
+///
+/// # Examples
+///
+/// A basic web server that serves "Hello, World!"
+/// ```rs
+/// use crane_webserver::webserver::WebServer;
+/// fn main() {
+///     let server = WebServer::bind("127.0.0.1:8888").route("/", root);
+///     server.start();
+/// }
+///
+/// fn root(_: Query) -> Response {
+///     ResponseBuilder::new()
+///         .status(200)
+///         .header("Content-Type", "text/plain")
+///         .body("Hello, World!")
+///         .build()
+/// }
+/// ```
 pub struct WebServer {
     listener: TcpListener,
     routes: Vec<(String, Box<Handler>)>,
@@ -20,31 +43,46 @@ pub struct WebServer {
 }
 
 impl WebServer {
-    pub fn bind<T: ToSocketAddrs>(addr: T) -> Self {
-        Self {
-            listener: match TcpListener::bind(addr) {
-                Ok(s) => s,
-                Err(e) => {
-                    eprintln!("[Error] Failed to bind to port: {e}");
-                    std::process::exit(1);
-                }
-            },
-
+    /// Construct a new WebServer.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if there if it fails to
+    /// bind. Most likely when the port is already in use.
+    ///
+    /// # Examples
+    ///
+    /// ```rs
+    /// use crane_webserver::webserver::WebServer;
+    /// fn main() {
+    ///     let server = WebServer::bind("127.0.0.1:8888");
+    /// }
+    /// ```
+    pub fn bind<T: ToSocketAddrs>(addr: T) -> std::io::Result<Self> {
+        Ok(Self {
+            listener: TcpListener::bind(addr)?,
             routes: Vec::new(),
             default_route: None,
             read_timeout: None,
-        }
+        })
     }
 
+    /// Sets the max reading time for the request.
+    ///
+    /// If reading the request takes longer than the timeout
+    /// than it will simply panic.
     pub fn read_timeout(mut self, timeout: Duration) -> Self {
         self.read_timeout = Some(timeout);
         self
     }
 
+    /// Returns the local socket address of the listener.
     pub fn get_addr(&self) -> std::io::Result<std::net::SocketAddr> {
         self.listener.local_addr()
     }
 
+    /// The function `func` will be called if the user requests a path
+    /// which is not mapped by the `route` function.
     pub fn default_route<F: Fn(Query) -> Response + 'static + Send + Sync>(
         mut self,
         func: F,
@@ -53,6 +91,7 @@ impl WebServer {
         self
     }
 
+    /// Maps a path to a function.
     pub fn route<F: Fn(Query) -> Response + 'static + Send + Sync>(
         mut self,
         path: &str,
@@ -62,6 +101,7 @@ impl WebServer {
         self
     }
 
+    /// Start the webserver.
     pub fn start(&self) -> ! {
         let mut incoming = self.listener.incoming();
         let mut pool = Pool::new(crate::NUM_THREADS);

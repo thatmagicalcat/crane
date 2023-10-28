@@ -1,9 +1,8 @@
 use std::sync::{Arc, Mutex};
 use std::thread::spawn;
 
-use crane_webserver::response::{Response, ResponseBuilder};
-use crane_webserver::webserver::WebServer;
 use crane_webserver::Query;
+use crane_webserver::*;
 
 use reqwest::blocking::get;
 use reqwest::StatusCode;
@@ -11,7 +10,9 @@ use reqwest::StatusCode;
 #[test]
 fn default_route() {
     let server = Arc::new(Mutex::new(
-        WebServer::bind("127.0.0.1:0").default_route(default_route_fn),
+        WebServer::bind("127.0.0.1:0")
+            .unwrap()
+            .default_route(default_route_fn),
     ));
 
     let addr = server.lock().unwrap().get_addr().unwrap();
@@ -38,7 +39,9 @@ fn default_route_fn(_: Query) -> Response {
 #[test]
 fn routes_and_query() {
     let server = Arc::new(Mutex::new(
-        WebServer::bind("127.0.0.1:0").route("/get/data", routes_and_query_fn),
+        WebServer::bind("127.0.0.1:0")
+            .unwrap()
+            .route("/get/data", routes_and_query_fn),
     ));
 
     let addr = server.lock().unwrap().get_addr().unwrap();
