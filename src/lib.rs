@@ -17,6 +17,7 @@
 //! A basic web server that serves "Hello, World!"
 //! ```rs
 //! use crane_webserver::webserver::WebServer;
+//!
 //! fn main() {
 //!     let server = WebServer::bind("127.0.0.1:8888").route("/", root);
 //!     server.start();
