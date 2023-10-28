@@ -1,5 +1,5 @@
 [package]
-name = "crane"
+name = "crane-webserver"
 version = "0.1.0"
 edition = "2021"
 authors = ["Pranjal Patel <pranjalpatel@duck.com>"]
@@ -18,5 +18,3 @@ url = "2.4.1"
 
 [dev-dependencies]
 reqwest = { version = "0.11.22", features = ["blocking"] }
-
-

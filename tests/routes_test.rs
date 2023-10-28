@@ -1,9 +1,9 @@
 use std::sync::{Arc, Mutex};
 use std::thread::spawn;
 
-use crane::response::{Response, ResponseBuilder};
-use crane::webserver::WebServer;
-use crane::Query;
+use crane_webserver::response::{Response, ResponseBuilder};
+use crane_webserver::webserver::WebServer;
+use crane_webserver::Query;
 
 use reqwest::blocking::get;
 use reqwest::StatusCode;
