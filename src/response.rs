@@ -8,8 +8,9 @@ use crate::HttpStatus;
 ///
 /// # Examples
 ///
-/// ```rust
-/// use crane_webserver::webserver::WebServer;
+/// ```no_run
+/// use crane_webserver::*;
+///
 /// fn main() {
 ///     // .. server setup
 /// }

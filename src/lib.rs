@@ -14,13 +14,13 @@
 //! # Examples
 //! 
 //! A basic web server that serves "Hello, World!"
-//! ```rust
-//! use crane_webserver::webserver::WebServer;
+//! ```no_run
+//! use crane_webserver::*;
 //!
 //! fn main() {
 //!     let server = WebServer::bind("127.0.0.1:8888", |path, _query| {
 //!         match path.as_str() {
-//!             "/" => root()
+//!             "/" => root(),
 //!             _ => ResponseBuilder::new().build()
 //!         }
 //!     }).unwrap();
