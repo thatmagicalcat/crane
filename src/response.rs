@@ -2,17 +2,21 @@ use crate::HttpStatus;
 
 /// Response builder.
 ///
+/// If you don't set any fields of the builder,
+/// it will return a 404 Not Found response
+/// with no header or body.
+///
 /// # Examples
 ///
-/// ```rs
+/// ```rust
 /// use crane_webserver::webserver::WebServer;
 /// fn main() {
 ///     // .. server setup
 /// }
 ///
-/// fn root(_: Query) -> Response {
+/// fn root() -> Response {
 ///     ResponseBuilder::new()
-///         .status(200)
+///         .status(HttpStatus::OK)
 ///         .header("Content-Type", "text/plain")
 ///         .body("Hello, World!")
 ///         .build()

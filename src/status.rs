@@ -1,4 +1,6 @@
 #![allow(non_camel_case_types)]
+
+/// Http Status Code
 #[repr(u32)]
 #[derive(Debug, Clone, Copy)]
 pub enum HttpStatus {

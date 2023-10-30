@@ -20,7 +20,7 @@ type Handler = dyn Fn(String, Query) -> Response + 'static + Send + Sync;
 /// # Examples
 ///
 /// A basic web server that serves "Hello, World!"
-/// ```rs
+/// ```rust
 /// use crane_webserver::webserver::WebServer;
 /// fn main() {
 ///     let server = WebServer::bind("127.0.0.1:8888", |path, _query| {
@@ -28,14 +28,14 @@ type Handler = dyn Fn(String, Query) -> Response + 'static + Send + Sync;
 ///             "/" => root()
 ///             _ => ResponseBuilder::new().build()
 ///         }
-///     });
+///     }).unwrap();
 ///
 ///     server.start();
 /// }
 ///
 /// fn root() -> Response {
 ///     ResponseBuilder::new()
-///         .status(200)
+///         .status(HttpStatus::OK)
 ///         .header("Content-Type", "text/plain")
 ///         .body("Hello, World!")
 ///         .build()
@@ -57,10 +57,17 @@ impl WebServer {
     ///
     /// # Examples
     ///
-    /// ```rs
+    /// ```rust
     /// use crane_webserver::webserver::WebServer;
     /// fn main() {
-    ///     let server = WebServer::bind("127.0.0.1:8888", |_, _| ResponseBuilder::new().build());
+    ///     let server = WebServer::bind("127.0.0.1:8888", |path, _query| {
+    ///         match path.as_str() {
+    ///             "/" => root()
+    ///             _ => ResponseBuilder::new().build()
+    ///         }
+    ///     }).unwrap(); 
+    ///
+    ///     server.start();
     /// }
     /// ```
     pub fn bind<T: ToSocketAddrs, F: Fn(String, Query) -> Response + Send + Sync + 'static>(
