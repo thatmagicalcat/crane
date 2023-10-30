@@ -15,7 +15,7 @@ cargo add crane-webserver
 Create an HTTP server that responds with a message.
 
 ```rust
-use crane_webserver::webserver::WebServer;
+use crane_webserver::*;
 
 fn main() {
     let server = WebServer::bind("127.0.0.1:8888", |path, query| {
