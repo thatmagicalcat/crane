@@ -10,9 +10,9 @@ use reqwest::StatusCode;
 #[test]
 fn default_route() {
     let server = Arc::new(Mutex::new(
-        WebServer::bind("127.0.0.1:0", |path, query| {
+        WebServer::bind("127.0.0.1:0", |path, _query| {
             match path.as_str() {
-                "/" => default_route_fn(query),
+                "/" => default_route_fn(),
                 _ => ResponseBuilder::new().build(),
             }
         })
@@ -32,7 +32,7 @@ fn default_route() {
     assert_eq!(response.text().unwrap(), "Hello, World!");
 }
 
-fn default_route_fn(_: Query) -> Response {
+fn default_route_fn() -> Response {
     ResponseBuilder::new()
         .status(HttpStatus::OK)
         .header("Content-Type", "text/plain")
