@@ -10,9 +10,13 @@ use reqwest::StatusCode;
 #[test]
 fn default_route() {
     let server = Arc::new(Mutex::new(
-        WebServer::bind("127.0.0.1:0")
+        WebServer::bind("127.0.0.1:0", |path, query| {
+            match path.as_str() {
+                "/" => default_route_fn(query),
+                _ => ResponseBuilder::new().build(),
+            }
+        })
             .unwrap()
-            .default_route(default_route_fn),
     ));
 
     let addr = server.lock().unwrap().get_addr().unwrap();
@@ -30,7 +34,7 @@ fn default_route() {
 
 fn default_route_fn(_: Query) -> Response {
     ResponseBuilder::new()
-        .status(200)
+        .status(HttpStatus::OK)
         .header("Content-Type", "text/plain")
         .body("Hello, World!")
         .build()
@@ -39,9 +43,13 @@ fn default_route_fn(_: Query) -> Response {
 #[test]
 fn routes_and_query() {
     let server = Arc::new(Mutex::new(
-        WebServer::bind("127.0.0.1:0")
+        WebServer::bind("127.0.0.1:0", |path, query| {
+            match path.as_str() {
+                "/get/data" => routes_and_query_fn(query),
+                _ => ResponseBuilder::new().build()
+            }
+        })
             .unwrap()
-            .route("/get/data", routes_and_query_fn),
     ));
 
     let addr = server.lock().unwrap().get_addr().unwrap();
@@ -65,7 +73,7 @@ fn routes_and_query_fn(q: Query) -> Response {
         .join("\n");
 
     ResponseBuilder::new()
-        .status(200)
+        .status(HttpStatus::OK)
         .header("Content-Type", "text/plain")
         .body(&res_body)
         .build()

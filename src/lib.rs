@@ -3,8 +3,6 @@
 //! `crane-webserver` proves the tools you need to quickly build
 //! a webserver.
 //!
-//! Don't ask me why I named it `crane`!!!
-//!
 //! # How it works?
 //! 
 //! At its core, `crane-webserver` contains a `WebServer`.
@@ -37,9 +35,11 @@
 
 pub use webserver::WebServer;
 pub use response::{Response, ResponseBuilder};
+pub use status::HttpStatus;
 
 pub(crate) mod response;
 pub(crate) mod webserver;
+pub(crate) mod status;
 
 pub type Query = std::collections::HashMap<String, Vec<String>>;
 

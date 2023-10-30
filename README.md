@@ -14,7 +14,7 @@ cargo add crane-webserver
 
 Create an HTTP server that responds with a message.
 
-```rs
+```rust
 use crane_webserver::webserver::WebServer;
 
 fn main() {

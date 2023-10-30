@@ -10,7 +10,7 @@ use response::Response;
 use scoped_threadpool::Pool;
 use url::Url;
 
-type Handler = dyn Fn(Query) -> Response + 'static + Send + Sync;
+type Handler = dyn Fn(String, Query) -> Response + 'static + Send + Sync;
 
 /// A web server.
 ///
@@ -23,11 +23,17 @@ type Handler = dyn Fn(Query) -> Response + 'static + Send + Sync;
 /// ```rs
 /// use crane_webserver::webserver::WebServer;
 /// fn main() {
-///     let server = WebServer::bind("127.0.0.1:8888").route("/", root);
+///     let server = WebServer::bind("127.0.0.1:8888", |path, _query| {
+///         match path.as_str() {
+///             "/" => root()
+///             _ => ResponseBuilder::new().build()
+///         }
+///     });
+///
 ///     server.start();
 /// }
 ///
-/// fn root(_: Query) -> Response {
+/// fn root() -> Response {
 ///     ResponseBuilder::new()
 ///         .status(200)
 ///         .header("Content-Type", "text/plain")
@@ -37,8 +43,7 @@ type Handler = dyn Fn(Query) -> Response + 'static + Send + Sync;
 /// ```
 pub struct WebServer {
     listener: TcpListener,
-    routes: Vec<(String, Box<Handler>)>,
-    default_route: Option<Box<Handler>>,
+    route_handler: Box<Handler>,
     read_timeout: Option<Duration>,
 }
 
@@ -55,14 +60,16 @@ impl WebServer {
     /// ```rs
     /// use crane_webserver::webserver::WebServer;
     /// fn main() {
-    ///     let server = WebServer::bind("127.0.0.1:8888");
+    ///     let server = WebServer::bind("127.0.0.1:8888", |_, _| ResponseBuilder::new().build());
     /// }
     /// ```
-    pub fn bind<T: ToSocketAddrs>(addr: T) -> std::io::Result<Self> {
+    pub fn bind<T: ToSocketAddrs, F: Fn(String, Query) -> Response + Send + Sync + 'static>(
+        addr: T,
+        route_handler: F,
+    ) -> std::io::Result<Self> {
         Ok(Self {
             listener: TcpListener::bind(addr)?,
-            routes: Vec::new(),
-            default_route: None,
+            route_handler: Box::new(route_handler),
             read_timeout: None,
         })
     }
@@ -79,26 +86,6 @@ impl WebServer {
     /// Returns the local socket address of the listener.
     pub fn get_addr(&self) -> std::io::Result<std::net::SocketAddr> {
         self.listener.local_addr()
-    }
-
-    /// The function `func` will be called if the user requests a path
-    /// which is not mapped by the `route` function.
-    pub fn default_route<F: Fn(Query) -> Response + 'static + Send + Sync>(
-        mut self,
-        func: F,
-    ) -> Self {
-        self.default_route = Some(Box::new(func));
-        self
-    }
-
-    /// Maps a path to a function.
-    pub fn route<F: Fn(Query) -> Response + 'static + Send + Sync>(
-        mut self,
-        path: &str,
-        func: F,
-    ) -> Self {
-        self.routes.push((path.to_string(), Box::new(func)));
-        self
     }
 
     /// Start the webserver.
@@ -124,7 +111,7 @@ impl WebServer {
         #[cfg(debug)]
         println!("New connection: {}", stream.local_addr().unwrap());
 
-        let mut buffer = [0; 1024];
+        let mut buffer = [0; 4096];
         stream.read(&mut buffer).unwrap();
 
         let buffer_str = std::str::from_utf8(&buffer).unwrap();
@@ -133,30 +120,20 @@ impl WebServer {
         // Base url and scheme is not used here, that's why arbitrary url and scheme used
         let url = Url::parse(&format!("http://localhost{path}")).unwrap();
 
-        let route_fn = self
-            .routes
-            .iter()
-            .find(|(p, _)| p == url.path())
-            .map(|(_, f)| f);
+        let mut query_map: HashMap<String, Vec<String>> =
+            HashMap::with_capacity(url.query_pairs().count());
+        let query_pairs = url.query_pairs();
+        query_pairs.into_iter().for_each(|(k, v)| {
+            query_map
+                .entry(k.into_owned())
+                .or_default()
+                .push(v.into_owned())
+        });
 
-        if route_fn.is_some() || self.default_route.is_some() {
-            let function = route_fn.unwrap_or_else(|| self.default_route.as_ref().unwrap());
+        let response = self.route_handler.as_ref()(url.path().to_string(), query_map);
 
-            let mut query_map: HashMap<String, Vec<String>> =
-                HashMap::with_capacity(url.query_pairs().count());
-            let query_pairs = url.query_pairs();
-            query_pairs.into_iter().for_each(|(k, v)| {
-                query_map
-                    .entry(k.into_owned())
-                    .or_default()
-                    .push(v.into_owned())
-            });
-
-            let response = function(query_map);
-
-            write!(stream, "{}", response).expect("Failed to write to stream");
-            stream.flush().expect("Failed to flush stream");
-        }
+        write!(stream, "{}", response).expect("Failed to respond");
+        stream.flush().expect("Failed to respond");
     }
 
     fn get_requested_path(request: &str) -> &str {

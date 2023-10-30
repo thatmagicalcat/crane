@@ -1,3 +1,5 @@
+use crate::HttpStatus;
+
 /// Response builder.
 ///
 /// # Examples
@@ -18,7 +20,7 @@
 /// ```
 #[derive(Debug)]
 pub struct ResponseBuilder {
-    status: u16,
+    status: HttpStatus,
     headers: Vec<(String, String)>,
     body: String,
 }
@@ -27,14 +29,14 @@ impl ResponseBuilder {
     /// Construct a new `ResponseBuilder`.
     pub fn new() -> Self {
         ResponseBuilder {
-            status: 200,
+            status: HttpStatus::Not_Found,
             headers: Vec::new(),
             body: String::new(),
         }
     }
 
     /// Set the html status code.
-    pub fn status(mut self, status: u16) -> Self {
+    pub fn status(mut self, status: HttpStatus) -> Self {
         self.status = status;
         self
     }
@@ -63,7 +65,7 @@ impl ResponseBuilder {
 
 /// The response which will be sent when requested.
 pub struct Response {
-    status: u16,
+    status: HttpStatus,
     headers: Vec<(String, String)>,
     body: String,
 }
@@ -79,8 +81,8 @@ impl std::fmt::Display for Response {
 
         write!(
             f,
-            "HTTP/1.1 {} {}\r\n{headers}\r\n\r\n{}",
-            self.status, "OK", self.body
+            "HTTP/1.1 {}\r\n{headers}\r\n\r\n{}",
+            dbg!(self.status.get_string()), self.body
         )
     }
 }
