@@ -18,13 +18,19 @@ Create an HTTP server that responds with a message.
 use crane_webserver::webserver::WebServer;
 
 fn main() {
-    let server = WebServer::bind("127.0.0.1:8888").route("/", root);
+    let server = WebServer::bind("127.0.0.1:8888", |path, query| {
+        match path.as_str() {
+            "/" => default_route_fn(query),
+            _ => ResponseBuilder::new().build(),
+        }
+    }).unwrap()
+
     server.start();
 }
 
-fn root(_: Query) -> Response {
+fn root() -> Response {
     ResponseBuilder::new()
-        .status(200)
+        .status(HttpStatus::OK)
         .header("Content-Type", "text/plain")
         .body("Hello, World!")
         .build()
