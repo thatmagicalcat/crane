@@ -87,7 +87,7 @@ impl std::fmt::Display for Response {
         write!(
             f,
             "HTTP/1.1 {}\r\n{headers}\r\n\r\n{}",
-            dbg!(self.status.get_string()), self.body
+            self.status.get_string(), self.body
         )
     }
 }
