@@ -23,7 +23,7 @@ use crate::HttpStatus;
 ///         .build()
 /// }
 /// ```
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct ResponseBuilder {
     status: HttpStatus,
     headers: Vec<(String, String)>,
@@ -69,6 +69,7 @@ impl ResponseBuilder {
 }
 
 /// The response which will be sent when requested.
+#[derive(Debug, Clone)]
 pub struct Response {
     status: HttpStatus,
     headers: Vec<(String, String)>,
